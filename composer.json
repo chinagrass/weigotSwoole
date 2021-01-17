@@ -1,6 +1,6 @@
 {
   "name": "weigotSwoole",
-  "description": "speed up lumen framework by swoole",
+  "description": "lumen framework by swoole",
   "type": "library",
   "license": "MIT",
   "authors": [
