@@ -1,5 +1,5 @@
 {
-  "name": "weigotSwoole",
+  "name": "weigot/swoole",
   "description": "lumen framework by swoole",
   "type": "library",
   "license": "MIT",
