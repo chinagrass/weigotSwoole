@@ -1,6 +1,6 @@
 <?php
 
-namespace WeigotSwoole;
+namespace Weigot\Swoole;
 
 use Swoole\WebSocket\Server;
 

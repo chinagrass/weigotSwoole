@@ -1,5 +1,5 @@
 <?php
-namespace WeigotSwoole;
+namespace Weigot\Swoole;
 
 use Illuminate\Support\ServiceProvider;
 
