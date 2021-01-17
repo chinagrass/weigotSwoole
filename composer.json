@@ -1,0 +1,24 @@
+{
+  "name": "weigotSwoole",
+  "description": "speed up lumen framework by swoole",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "caowei",
+      "email": "caowei_e@sina.cn"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "ext-swoole": "*",
+    "laravel/lumen-framework": ">=5.5"
+  },
+  "require-dev": {
+  },
+  "autoload": {
+    "psr-4": {
+      "WeigotSwoole\\": "src/"
+    }
+  }
+}
