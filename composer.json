@@ -12,7 +12,8 @@
   "require": {
     "php": ">=7.0",
     "ext-swoole": "*",
-    "laravel/lumen-framework": ">=5.5"
+    "laravel/lumen-framework": ">=5.5",
+    "illuminate/redis": "*"
   },
   "require-dev": {
   },

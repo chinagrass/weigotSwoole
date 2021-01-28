@@ -10,13 +10,11 @@ class WebSocketServiceProvider extends ServiceProvider
         $this->commands([
             Command::class,
         ]);
-
         $this->app->singleton('swoole.http', function ($app) {
             $this->mergeConfigFrom(
-                __DIR__ . '/../config/swoole.php', 'swoole'
+                __DIR__ . '/../config/wgSwoole.php', 'wgSwoole'
             );
-
-            $swooleConfig = $app['config']['swoole'];
+            $swooleConfig = $app['config']['wgSwoole'];
             return new WebSocketServer($swooleConfig);
         });
     }
