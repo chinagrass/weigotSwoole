@@ -89,7 +89,8 @@ class UserServer
     public static function setUserInfoById($userInfo)
     {
         $key = CacheKeyEnum::USER_INFO_KEY . $userInfo["id"];
-        $userInfo = Redis::hmset($key, $userInfo);
+        Redis::hdel($key);
+        Redis::hmset($key, $userInfo);
     }
 
     /**
