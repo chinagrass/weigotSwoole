@@ -10,14 +10,14 @@ class ActionCodeEnum
     const ADMIN = 101;
     /** @var int 其他用户操作 */
     const OTHER_USER = 102;
-    /** @var int 发送消息 */
-    const SEND_MSG = 103;
     /** @var int 用户详情 */
-    const USER_INFO = 104;
+    const USER_INFO = 200;
     /** @var int 用户列表 */
     const USER_LIST = 201;
     /** @var int 新用户上线 */
     const NEW_USER_ONLINE = 202;
     /** @var int 用户下线 */
     const USER_OUTLINE = 203;
+    /** @var int 发送消息 */
+    const SEND_MSG = 300;
 }
