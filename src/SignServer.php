@@ -14,7 +14,7 @@ class SignServer
      * @param int $expireTime 过期时间
      * @return string
      */
-    public static function getSign($userId, $username, $expireTime = 0)
+    public static function getSign($userId, $username, $expireTime = 86400)
     {
         $user = [
             "id" => $userId,
@@ -27,12 +27,13 @@ class SignServer
         // @do 存入缓存
         $cacheKey = CacheKeyEnum::SIGN_KEY . $sign;
         Redis::hmset($cacheKey, $user);
-        if ($expireTime > 0) {
-            Redis::expire($cacheKey, $expireTime);
-        }
         // @do 存入用户详情
         $userCacheKey = CacheKeyEnum::USER_INFO_KEY . $userId;
         Redis::hmset($userCacheKey, $user);
+        if ($expireTime > 0) {
+            Redis::expire($cacheKey, $expireTime);
+            Redis::expire($userCacheKey, $expireTime * 2);
+        }
         return $sign;
     }
 
