@@ -86,11 +86,21 @@ class UserServer
         return $userInfo;
     }
 
-    public static function setUserInfoById($userInfo)
+    /**
+     * 设置用户信息
+     * @param $userInfo
+     * @param int $expireTime
+     */
+    public static function setUserInfoById($userInfo, $expireTime = 172800)
     {
+        empty($userInfo["uid"]) && $userInfo["uid"] = SignServer::uid();
+        empty($userInfo["created"]) && $userInfo["created"] = SignServer::created();
         $key = CacheKeyEnum::USER_INFO_KEY . $userInfo["id"];
         Redis::hdel($key);
         Redis::hmset($key, $userInfo);
+        if ($expireTime > 0) {
+            Redis::expire($key, $expireTime);
+        }
     }
 
     /**
@@ -114,7 +124,7 @@ class UserServer
     public static function bindUserIdFd($userId, $fd)
     {
         $uidBindKey = CacheKeyEnum::BIND_UID_KEY;
-        $userIds = Redis::zadd($uidBindKey, $fd, $userId);
+        Redis::zadd($uidBindKey, $fd, $userId);
     }
 
     /**
@@ -142,7 +152,7 @@ class UserServer
 
     /**
      * 从房间中移除用户
-     * @param $roomId
+     * @param $userInfo
      * @param $userId
      */
     public static function removeUserFromRoom($userInfo, $userId)

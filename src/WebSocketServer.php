@@ -92,8 +92,8 @@ class WebSocketServer
                 UserServer::roomAddUser($room, $user["id"], $request->fd);
                 // 绑定用户id和fd
                 UserServer::bindUserIdFd($user["id"], $request->fd);
-                $bindUids = $roomUserList = [];
-                // @todo 获得列表中所有成员
+                $roomUserList = [];
+                // @do 获得列表中所有成员
                 $users = UserServer::getUsersByRoom($room);
                 foreach ($users as $userId => $fd) {
                     $fd = (int)$fd;
@@ -101,20 +101,19 @@ class WebSocketServer
                     if (!$userInfo) {
                         continue;
                     }
-                    $roomUserList[$fd] = [
-                        "username" => $userInfo["username"],
-                        "id" => $userInfo["id"]
-                    ];
+                    unset($userInfo["id"]);
+                    $roomUserList[$fd] = $userInfo;
                     if ($fd == $request->fd) {
                         continue;
                     }
                     // 向用户通知新用户上线
                     $online = [
-                        "type" => "",
+                        "type" => MsgTypeEnum::STATE,
                         "username" => $user["username"],
                         "fd" => $request->fd,
-                        "content" => []
+                        "content" => $user
                     ];
+                    unset($online["content"]["id"]);
                     $msg = MessageServer::formatData(ActionCodeEnum::NEW_USER_ONLINE, $online);
                     $ws->push($fd, $msg);
                 }
@@ -129,7 +128,7 @@ class WebSocketServer
                 ];
                 $result = MessageServer::formatData(ActionCodeEnum::ADMIN, $welcome);
                 $ws->push($request->fd, $result);
-                //@todo 查询所有用户并发送用户列表
+                //@do 查询所有用户并发送用户列表
                 $userQuery = [
                     "type" => MsgTypeEnum::STATE,
                     "username" => "",
@@ -158,27 +157,48 @@ class WebSocketServer
             if (empty($data["action"])) {
                 $ws->push($frame->fd, "action is error");
             };
+            $fd = $frame->fd;
             $connections = $ws->connections;
             switch ($data["action"]) {
                 case ClientActionEnum::MESSAGE:
                     $msgData = [
                         "type" => MsgTypeEnum::TEXT,
                         "username" => "",
-                        "fd" => $frame->fd, // 发送者fd
+                        "fd" => $fd, // 发送者fd
                         "content" => [
                             $data["params"]["content"]
                         ]
                     ];
                     $message = MessageServer::formatData(ActionCodeEnum::SEND_MSG, $msgData);
-                    foreach ($connections as $fd) {
+                    foreach ($connections as $connectionFd) {
                         // 向所有用户推送消息
-                        $ws->push($fd, $message);
+                        $ws->push($connectionFd, $message);
                     }
                     break;
                 case ClientActionEnum::INFO:
-                    //@todo 查询用户信息
+                    // @do 查询userID
+                    $userIds = UserServer::getBindUserIds($fd);
+                    //@do 查询用户信息
+                    foreach ($userIds as $userId) {
+                        $userInfo = UserServer::userInfoById($userId);
+                        if (!empty($userInfo)) {
+                            break;
+                        }
+                    }
+                    if (!empty($userInfo)) {
+                        unset($userInfo["id"]);
+                        //@do 发送消息
+                        $msgData = [
+                            "type" => MsgTypeEnum::STATE,
+                            "username" => $userInfo["username"],
+                            "fd" => $fd, // 发送者fd
+                            "content" => $userInfo
+                        ];
+                    }
+                    $message = MessageServer::formatData(ActionCodeEnum::USER_INFO, $msgData);
+                    $ws->push($fd, $message);
                     break;
-                case ClientActionEnum::ONLINE:
+                case ClientActionEnum::ONLINE_LIST:// 在线用户列表
                     //@todo 推送用户消息
                     break;
             }
