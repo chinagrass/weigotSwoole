@@ -6,11 +6,9 @@ use App\Http\Service\UserService;
 use App\Models\UserModel;
 use Illuminate\Support\Facades\Redis;
 use Swoole\Http\Request;
-use Swoole\Http\Response;
 use Swoole\WebSocket\Frame;
 use Swoole\WebSocket\Server;
 use Weigot\Swoole\Enum\ActionCodeEnum;
-use Weigot\Swoole\Enum\CacheKeyEnum;
 use Weigot\Swoole\Enum\ClientActionEnum;
 use Weigot\Swoole\Enum\MsgTypeEnum;
 
@@ -25,7 +23,6 @@ class WebSocketServer
     {
         $this->config = $swooleConfig;
         $this->heartBeatInternal = $this->config["server"]['heart_beat_internal'];
-
         $this->server = new Server($this->config["server"]['host'], $this->config["server"]['port']);
     }
 
@@ -199,7 +196,39 @@ class WebSocketServer
                     $ws->push($fd, $message);
                     break;
                 case ClientActionEnum::ONLINE_LIST:// 在线用户列表
-                    //@todo 推送用户消息
+                    // @do 查询userID
+                    $userIds = UserServer::getBindUserIds($fd);
+                    //@do 查询用户信息
+                    foreach ($userIds as $userId) {
+                        $userInfo = UserServer::userInfoById($userId);
+                        if (!empty($userInfo)) {
+                            break;
+                        }
+                    }
+                    if (!empty($userInfo)) {
+                        $room = $userInfo["groupId"];
+                        // @do 获得列表中所有成员
+                        $users = UserServer::getUsersByRoom($room);
+                        $roomUserList = [];
+                        foreach ($users as $userId => $ufd) {
+                            $ufd = (int)$ufd;
+                            $userInfo = UserServer::userInfoById($userId);
+                            if (!$userInfo) {
+                                continue;
+                            }
+                            unset($userInfo["id"]);
+                            $roomUserList[$ufd] = $userInfo;
+                        }
+                        //@do 查询所有用户并发送用户列表
+                        $userQuery = [
+                            "type" => MsgTypeEnum::STATE,
+                            "username" => "",
+                            "fd" => "",
+                            "content" => $roomUserList
+                        ];
+                        $list = MessageServer::formatData(ActionCodeEnum::USER_LIST, $userQuery);
+                        $ws->push($frame->fd, $list);
+                    }
                     break;
             }
         } catch (\Exception $e) {
@@ -221,7 +250,7 @@ class WebSocketServer
             foreach ($users as $userId) {
                 $userInfo = UserServer::userInfoById($userId);
                 if (!empty($userInfo["groupId"])) {
-                    //@todo 删除房间中的这个用户
+                    //@do 删除房间中的这个用户
                     UserServer::removeUserFromRoom($userInfo, $userId);
                 }
                 // 发送用户离开的消息
@@ -232,7 +261,7 @@ class WebSocketServer
                     "content" => []
                 ];
                 $message = MessageServer::formatData(ActionCodeEnum::USER_OUTLINE, $outMsg);
-                //@todo 查询数据,离开房间
+                //@do 查询数据,离开房间
                 foreach ($ws->connections as $connectionFd) {
                     $ws->push($connectionFd, $message);
                 }
