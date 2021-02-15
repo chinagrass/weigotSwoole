@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Redis;
 use Weigot\Swoole\Enum\CacheKeyEnum;
 use Weigot\Swoole\Exception\WGException;
 
-class SignServer
+class SignService
 {
     /**
      * @param $user
@@ -31,7 +31,7 @@ class SignServer
             Redis::expire($cacheKey, $expireTime);
         }
         // @do 存入用户详情
-        UserServer::setUserInfoById($user, $expireTime * 2);
+        UserService::setUserInfoById($user, $expireTime * 2);
         return $sign;
     }
 

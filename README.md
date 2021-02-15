@@ -21,7 +21,7 @@ $ composer require weigot/swoole
 ```
 2.运行
 ```$xslt
-$ php artisan weigot-sw start
+$ php artisan weigot-ws start
 ```
 3.使用supervisor守护进程
 ```$xslt
@@ -98,10 +98,24 @@ server {
     "action":"",        // 行为code
     "data":{            // 消息
         "type":"",      // 消息类型
-        "username":"",  // 用户
-        "fd":"",        // fd
-        "content":[]    // 内容
-    }
+        "content":{     // 内容
+            "message":"",
+            "userList":[
+                {
+                    "fd":"",
+                    "username":"",
+                    ...
+                },
+                ...
+            ],
+            "userInfo":{
+                "fd":"",
+                "username":"",
+                ...
+            }
+        }
+    },
+    "endTime":""
 }
 ```
 2.服务端action枚举

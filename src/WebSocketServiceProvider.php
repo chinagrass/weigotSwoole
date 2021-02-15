@@ -15,7 +15,7 @@ class WebSocketServiceProvider extends ServiceProvider
                 __DIR__ . '/../config/wgSwoole.php', 'wgSwoole'
             );
             $swooleConfig = $app['config']['wgSwoole'];
-            return new WebSocketServer($swooleConfig);
+            return new WebSocketService($swooleConfig);
         });
     }
 }

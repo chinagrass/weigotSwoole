@@ -11,7 +11,7 @@ namespace Weigot\Swoole;
 use Illuminate\Support\Facades\Redis;
 use Weigot\Swoole\Enum\CacheKeyEnum;
 
-class UserServer
+class UserService
 {
     /**
      * 获取房间中的所有用户
@@ -93,8 +93,8 @@ class UserServer
      */
     public static function setUserInfoById($userInfo, $expireTime = 172800)
     {
-        empty($userInfo["uid"]) && $userInfo["uid"] = SignServer::uid();
-        empty($userInfo["created"]) && $userInfo["created"] = SignServer::created();
+        empty($userInfo["uid"]) && $userInfo["uid"] = SignService::uid();
+        empty($userInfo["created"]) && $userInfo["created"] = SignService::created();
         $key = CacheKeyEnum::USER_INFO_KEY . $userInfo["id"];
         Redis::hdel($key);
         Redis::hmset($key, $userInfo);

@@ -1,11 +1,12 @@
 <?php
+
 namespace Weigot\Swoole;
 
 use Illuminate\Console\Command as IlluminateCommand;
 
 class Command extends IlluminateCommand
 {
-    protected $signature = 'weigot-sw {action : how to handle the server}';
+    protected $signature = 'weigot-ws {action : how to handle the server}';
 
     protected $description = 'Handle swoole http server with start | restart | reload | stop | status';
 
