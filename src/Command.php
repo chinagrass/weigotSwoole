@@ -105,7 +105,11 @@ class Command extends IlluminateCommand
 
     protected function getPid()
     {
-        $pid_file = config('swoole.pid_file');
+        $pid_file = config('wgSwoole.server.pid_file');
+        if (!$pid_file) {
+            $config = require_once __DIR__ . '/../config/wgSwoole.php';
+            $pid_file = $config["server"]["pid_file"];
+        }
         if (file_exists($pid_file)) {
             $pid = intval(file_get_contents($pid_file));
             if (posix_getpgid($pid)) {
