@@ -20,6 +20,7 @@ class SignService
         if (empty($user["id"]) || empty($user["username"])) {
             throw new WGException("Basic information of users is error");
         }
+        //@todo 限定连接人数
         $user["uid"] = self::uid();
         $user["created"] = self::created();
         $key = implode("-", $user);

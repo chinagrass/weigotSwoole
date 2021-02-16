@@ -39,6 +39,7 @@ class MessageService
      */
     public static function pushWelcome($fd, $msg, Server $ws, $msgType = MsgTypeEnum::TEXT)
     {
+        $msg = htmlspecialchars($msg);
         $welcome = [
             "type" => $msgType,
             "content" => ["message" => $msg]
@@ -89,6 +90,7 @@ class MessageService
     public static function pushUserInfo($fd, $user, Server $ws)
     {
         unset($user["id"]);
+        $user["fd"] = $fd;
         $userInfo = [
             "type" => MsgTypeEnum::STATE,
             "content" => ["userInfo" => $user]
@@ -106,6 +108,7 @@ class MessageService
      */
     public static function pushServiceMsg($fd, $msg, Server $ws, $msgType = MsgTypeEnum::TEXT)
     {
+        $msg = htmlspecialchars($msg);
         $msg = [
             "type" => $msgType,
             "content" => [
@@ -126,6 +129,7 @@ class MessageService
      */
     public static function pushMsg($fd, $msg, $user, Server $ws, $msgType = MsgTypeEnum::TEXT)
     {
+        $msg = htmlspecialchars($msg);
         unset($user["id"]);
         $msg = [
             "type" => $msgType,
@@ -155,6 +159,15 @@ class MessageService
         ];
         $msg = self::formatData(ActionCodeEnum::USER_OUTLINE, $msg);
         $ws->push($fd, $msg);
+    }
+
+    /**
+     * @param $fd
+     * @param Server $ws
+     */
+    public static function pushPong($fd, Server $ws)
+    {
+        $ws->push($fd, 'PONG');
     }
 
 }

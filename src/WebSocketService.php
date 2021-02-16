@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Redis;
 use Swoole\Http\Request;
 use Swoole\WebSocket\Frame;
 use Swoole\WebSocket\Server;
-use Weigot\Swoole\Enum\ActionCodeEnum;
 use Weigot\Swoole\Enum\ClientActionEnum;
-use Weigot\Swoole\Enum\MsgTypeEnum;
 
 class WebSocketService
 {
@@ -81,6 +79,7 @@ class WebSocketService
             if (empty($user) || empty($room)) {
                 $ws->disconnect($request->fd, SWOOLE_WEBSOCKET_CLOSE_NORMAL, '认证失败');
             } else {
+                $user["fd"] = $request->fd;
                 $user["groupId"] = $room;
                 UserService::setUserInfoById($user);
                 $ws->bind($request->fd, $user["id"]);
@@ -98,17 +97,18 @@ class WebSocketService
                         continue;
                     }
                     unset($userInfo["id"]);
+                    $userInfo["fd"] = $fd;
                     $roomUserList[$fd] = $userInfo;
                     if ($fd == $request->fd) {
                         continue;
                     }
                     // 向用户通知新用户上线
-                    MessageService::pushNewUserOnline($userInfo["username"], $fd, $user, $ws);
+                    MessageService::pushNewUserOnline($fd, $user, $ws);
                 }
                 // 欢迎语
-                MessageService::pushWelcome($user["username"], $request->fd, $this->config["msg"]["welcome"], $ws);
+                MessageService::pushWelcome($request->fd, $this->config["msg"]["welcome"], $ws);
                 //@do 查询所有用户并发送用户列表
-                MessageService::pushRoomUserList($user["username"], $request->fd, $roomUserList, $ws);
+                MessageService::pushRoomUserList($request->fd, $roomUserList, $ws);
             }
         } catch (\Exception $e) {
             echo $e->getFile() . ":" . $e->getLine() . ":" . $e->getMessage() . "\n";
@@ -124,52 +124,38 @@ class WebSocketService
     public function onMessage(Server $ws, Frame $frame)
     {
         try {
+            $userInfo = [];
+            $fd = $frame->fd;
             $json = $frame->data;
+            if ($json == 'PING') {
+                MessageService::pushPong($fd, $ws);
+                return true;
+            }
             $data = json_decode($json, true);
             if (empty($data["action"])) {
                 $ws->push($frame->fd, "action is error");
+                return true;
             };
-            $fd = $frame->fd;
             // @do 查询userID
             $userIds = UserService::getBindUserIds($fd);
             //@do 查询用户信息
             foreach ($userIds as $userId) {
                 $userInfo = UserService::userInfoById($userId);
                 if (!empty($userInfo)) {
+                    $userInfo['fd'] = $fd;
                     break;
                 }
             }
             $connections = $ws->connections;
             switch ($data["action"]) {
                 case ClientActionEnum::MESSAGE:
-                    $msgData = [
-                        "type" => MsgTypeEnum::TEXT,
-                        "username" => "",
-                        "frameFd" => $fd, // 发送者fd
-                        "content" => [
-                            $data["params"]["content"]
-                        ]
-                    ];
-                    $message = MessageService::formatData(ActionCodeEnum::SEND_MSG, $msgData);
                     foreach ($connections as $connectionFd) {
                         // 向所有用户推送消息
-                        $ws->push($connectionFd, $message);
+                        MessageService::pushMsg($connectionFd, $data["params"]["content"], $userInfo, $ws);
                     }
                     break;
                 case ClientActionEnum::INFO:
-
-                    if (!empty($userInfo)) {
-                        unset($userInfo["id"]);
-                        //@do 发送消息
-                        $msgData = [
-                            "type" => MsgTypeEnum::STATE,
-                            "username" => $userInfo["username"],
-                            "frameFd" => $fd, // 发送者fd
-                            "content" => $userInfo
-                        ];
-                    }
-                    $message = MessageService::formatData(ActionCodeEnum::USER_INFO, $msgData);
-                    $ws->push($fd, $message);
+                    MessageService::pushUserInfo($fd, $userInfo, $ws);
                     break;
                 case ClientActionEnum::ONLINE_LIST:// 在线用户列表
                     // @do 查询userID
@@ -193,17 +179,10 @@ class WebSocketService
                                 continue;
                             }
                             unset($userInfo["id"]);
+                            $userInfo["fd"] = $ufd;
                             $roomUserList[$ufd] = $userInfo;
                         }
-                        //@do 查询所有用户并发送用户列表
-                        $userQuery = [
-                            "type" => MsgTypeEnum::STATE,
-                            "username" => "",
-                            "fd" => "",
-                            "content" => $roomUserList
-                        ];
-                        $list = MessageService::formatData(ActionCodeEnum::USER_LIST, $userQuery);
-                        $ws->push($frame->fd, $list);
+                        MessageService::pushRoomUserList($frame->fd, $roomUserList, $ws);
                     }
                     break;
             }
@@ -229,32 +208,16 @@ class WebSocketService
                     //@do 删除房间中的这个用户
                     UserService::removeUserFromRoom($userInfo, $userId);
                 }
-                // 发送用户离开的消息
-                $outMsg = [
-                    "type" => MsgTypeEnum::STATE,
-                    "username" => $userInfo["username"],
-                    "fd" => $fd,
-                    "content" => []
-                ];
-                $message = MessageService::formatData(ActionCodeEnum::USER_OUTLINE, $outMsg);
+                $userInfo["fd"] = $fd;
                 //@do 查询数据,离开房间
                 foreach ($ws->connections as $connectionFd) {
-                    $ws->push($connectionFd, $message);
+                    // 发送用户离开的消息
+                    MessageService::pushUserOutline($connectionFd, $userInfo, $ws);
                 }
             }
         } catch (\Exception $e) {
             echo $e->getFile() . ":" . $e->getLine() . ":" . $e->getMessage() . "\n";
         }
-
-    }
-
-    /**
-     * 请求消息事件
-     * @param $request
-     * @param $response
-     */
-    public function onRequest($request, $response)
-    {
 
     }
 }
