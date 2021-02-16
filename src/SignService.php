@@ -11,16 +11,26 @@ class SignService
 {
     /**
      * @param $user
+     * @param $roomId
      * @param int $expireTime
      * @return string
      * @throws WGException
      */
-    public static function getSign($user, $expireTime = 86400)
+    public static function getSign($user, $roomId, $expireTime = 86400)
     {
         if (empty($user["id"]) || empty($user["username"])) {
             throw new WGException("Basic information of users is error");
         }
-        //@todo 限定连接人数
+        //@do 限定连接人数
+        $cacheKeyRoom = CacheKeyEnum::LIMIT_CONNECTIONS . $roomId;
+        $roomLimitConnections = Redis::get($cacheKeyRoom);
+        if (!$roomLimitConnections) {
+            //@do 判断连接数量
+            $userNum = UserService::roomUserNum($roomId);
+            if ($userNum >= $roomLimitConnections) {
+                throw new WGException("Connection number overrun");
+            }
+        }
         $user["uid"] = self::uid();
         $user["created"] = self::created();
         $key = implode("-", $user);

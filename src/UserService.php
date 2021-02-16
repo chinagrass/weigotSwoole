@@ -167,4 +167,15 @@ class UserService
         $bindKey = CacheKeyEnum::BIND_UID_KEY;
         Redis::zrem($bindKey, $userId);
     }
+
+    /**
+     * 获得房间中用户的数量
+     * @param $roomId
+     * @return mixed
+     */
+    public static function roomUserNum($roomId)
+    {
+        $key = self::chatRoomUserKey($roomId);
+        return Redis::zcard($key);
+    }
 }

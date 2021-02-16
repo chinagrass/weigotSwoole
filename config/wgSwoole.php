@@ -16,7 +16,4 @@ return [
     "msg" => [
         "welcome" => "欢迎来到聊天室",
     ],
-    "client" => [
-        "limitConnections" => false,
-    ],
 ];
