@@ -44,8 +44,6 @@ class WebSocketService
         $ws->on("message", [$this, "onMessage"]);
         //监听WebSocket连接关闭事件
         $ws->on("close", [$this, "onClose"]);
-        //监听WebSocket请求参数
-        $ws->on("request", [$this, "onRequest"]);
         $ws->start();
     }
 

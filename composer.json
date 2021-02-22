@@ -3,7 +3,7 @@
   "description": "lumen framework by swoole",
   "type": "library",
   "license": "MIT",
-  "version": "v0.1.3",
+  "version": "v0.1.4",
   "authors": [
     {
       "name": "caowei",
