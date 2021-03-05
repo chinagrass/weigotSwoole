@@ -118,6 +118,7 @@ class WebSocketService
      * 消息事件
      * @param Server $ws
      * @param Frame $frame
+     * @return bool
      */
     public function onMessage(Server $ws, Frame $frame)
     {

@@ -19,9 +19,9 @@
 ```$xslt
 $ composer require weigot/swoole
 ```
-2.运行
+2.操作命令
 ```$xslt
-$ php artisan weigot-ws start
+$ php artisan weigot-ws start | restart | reload | stop | status   // 运行 | 重启 | 重新加载 | 停止 | 状态
 ```
 3.使用supervisor守护进程
 ```$xslt
